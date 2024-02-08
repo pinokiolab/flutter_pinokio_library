@@ -1,4 +1,4 @@
-library flutter_pinokio_package;
+library flutter_pinokio_library;
 
 export 'src/data_table/custom_swipe_image_gallery.dart';
 export 'src/data_table/get_image_url_list.dart';

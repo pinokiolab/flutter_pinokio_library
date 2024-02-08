@@ -3,7 +3,7 @@ import 'dart:html';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_pinokio_library/flutter_pinokio_package.dart';
+import 'package:flutter_pinokio_library/flutter_pinokio_library.dart';
 import 'package:http/http.dart';
 import 'package:swipe_image_gallery/swipe_image_gallery.dart';
 

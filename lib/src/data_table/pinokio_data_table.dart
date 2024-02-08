@@ -1,7 +1,7 @@
 import 'package:data_table_2/data_table_2.dart';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_pinokio_library/flutter_pinokio_package.dart';
+import 'package:flutter_pinokio_library/flutter_pinokio_library.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 // PinokioDataColumn을 정의할 때, 해당 Column에 들어가는 Data들이 어떤 형태인지를 정의합니다.
