@@ -194,14 +194,16 @@ Widget clipBoardDateBuilder(data, field) {
   );
 }
 
-Widget pictureBuilder(data, field, jwt) {
+Widget pictureBuilder(
+    data, field, jwt, List<String> originalUrlList, thumbnailUrlList) {
   // TODO: 사진 구현
-  return Container();
-  // return SearchImageList(
-  //     data: data['picture_id_list'],
-  //     bl: data['bl'],
-  //     dataRowHeight: 75,
-  //     jwt: jwt);
+  // return Container();
+  return SearchImageList(
+      originalUrlList: originalUrlList,
+      thumbnailUrlList: thumbnailUrlList,
+      bl: data['bl'],
+      dataRowHeight: 75,
+      jwt: jwt);
 }
 
 Widget dividerBuilder(data, field) {
@@ -275,6 +277,8 @@ class PinokioDataTable extends StatefulWidget {
     required this.sortAscending,
     required this.rowsPerPage,
     required this.jwt,
+    required this.originalUrlList,
+    required this.thumbnailUrlList,
     this.selectable = false,
     this.selectedList,
     this.onSelectedChanged,
@@ -286,6 +290,8 @@ class PinokioDataTable extends StatefulWidget {
   final bool sortAscending;
   final int rowsPerPage;
   final String jwt;
+  final List<String> originalUrlList;
+  final List<String> thumbnailUrlList;
   final bool selectable;
   final List<dynamic>? selectedList;
   final Function(bool?, dynamic)? onSelectedChanged;
@@ -374,7 +380,9 @@ class PinokioDataTableState extends State<PinokioDataTable> {
                           hoverIdx = index;
                         });
                       },
-                      jwt: widget.jwt)),
+                      jwt: widget.jwt,
+                      originalUrlList: widget.originalUrlList,
+                      thumbnailUrlList: widget.thumbnailUrlList)),
             ),
           ),
           Container(child: const Text('Paginator 자리')),
@@ -392,6 +400,8 @@ class PinokioDataTableSource extends DataTableSource {
     required this.hoverIdx,
     required this.setHoverIdx,
     required this.jwt,
+    required this.originalUrlList,
+    required this.thumbnailUrlList,
     this.selectable = false,
     this.selectedList,
     this.onSelectedChanged,
@@ -402,6 +412,8 @@ class PinokioDataTableSource extends DataTableSource {
   final int hoverIdx;
   final Function(int index) setHoverIdx;
   final String jwt;
+  final List<String> originalUrlList;
+  final List<String> thumbnailUrlList;
 
   final bool selectable;
   final List<dynamic>? selectedList;
@@ -447,7 +459,8 @@ class PinokioDataTableSource extends DataTableSource {
           body = blTextBuilder(data, column.field);
           break;
         case ColumnType.picture:
-          body = pictureBuilder(data, column.field, jwt);
+          body = pictureBuilder(
+              data, column.field, jwt, originalUrlList, thumbnailUrlList);
           break;
         case ColumnType.divider:
           body = Container(

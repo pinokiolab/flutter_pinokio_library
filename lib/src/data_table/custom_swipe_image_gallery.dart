@@ -3,35 +3,27 @@ import 'dart:html';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
-import 'package:flutter_pinokio_library/flutter_pinokio_library.dart';
 import 'package:http/http.dart';
 import 'package:swipe_image_gallery/swipe_image_gallery.dart';
 
 Future<SwipeImageGallery> customSwipeImageGallery(
   BuildContext context,
   int index,
-  List<String> pictureList,
+  List<String> originalUrlList,
   String bl,
   String jwt,
 ) async {
-  List<String> imageUrlList = [];
-  for (var picture in pictureList) {
-    var fileName = picture.split(':').last;
-    var url = await getOriginalUrl(jwt, fileName);
-    imageUrlList.add(url);
-  }
-
   return SwipeImageGallery(
       context: context,
       initialIndex: index,
-      children: List.generate(imageUrlList.length, (index) {
+      children: List.generate(originalUrlList.length, (index) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('검사 사진 상세보기'),
             actions: [
               IconButton(
                   onPressed: () async {
-                    var t = await get(Uri.parse(imageUrlList[index]));
+                    var t = await get(Uri.parse(originalUrlList[index]));
                     var b = Blob([t.bodyBytes]);
                     var u = Url.createObjectUrlFromBlob(b);
                     AnchorElement(href: u)
@@ -51,9 +43,9 @@ Future<SwipeImageGallery> customSwipeImageGallery(
                   SizedBox(
                     height: double.infinity,
                     child: CachedNetworkImage(
-                      cacheKey: 'Original${imageUrlList.elementAt(index)}}',
+                      cacheKey: 'Original${originalUrlList.elementAt(index)}}',
                       cacheManager: SwipeCacheManager.instance,
-                      imageUrl: imageUrlList.elementAt(index),
+                      imageUrl: originalUrlList.elementAt(index),
                       fit: BoxFit.contain,
                       progressIndicatorBuilder:
                           (context, url, downloadProgress) => Center(
