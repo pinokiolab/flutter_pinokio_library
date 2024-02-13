@@ -58,6 +58,13 @@ Widget checkButtonBuilder(data, field) {
   return Center(
     child: Container(),
     // TODO : 체크박스 아이콘 구현
+    // onSelectedChanged에 따라서 아래 주석처리 된 아이콘을 보여주는 코드를 작성하면 됩니다.
+    // 주의점 : TIPA 웹페이지에서 해당 체크버튼을 사용할 때, 페이지 별로 아이콘을 보여주는 기준이 다르기 때문에 해당 상황을 잘 고려해서 구현해야 합니다.
+    // ex) 감정방식 변경 메뉴 : 제한 없음
+    //     감정요청 : 최초 선택한 화물과 동일한 권리자만 selectable, 나머지는 unselectable
+    //     세관통보 : 최초 선택한 화물과 customs_id가 같으면 selectable, 나머지는 unselectable
+    //     등등...
+    // 해당 로직은 기존 소스코드의 각 페이지(선택 가능한)별 widget - XXX_table_source.dart의 getRow의 cells의 첫 부분에서 확인 가능합니다.
     // child: state.selectedList.isEmpty
     //     ? SvgPicture.asset("images/icon_checkbox_selectable.svg")
     //     : state.selectedList.contains(data['freight_id'])
@@ -125,6 +132,9 @@ class DetailButton extends MyWidget {
                 message: '해당 화물에\n메모가 있습니다.',
                 child: InkWell(
                     onTap: onTap,
+                    // TODO: 버튼 클릭 시 해당 화물의 상세보기 화면(SearchProductDetailPage)으로 이동하는 코드를 작성하면 됩니다.
+                    // 아래 주석 처리된 부분이 해당 Navigator 코드이긴 한데, route를 못불러오는 문제가 있어서(라이브러리에는 해당 페이지가 없으므로)
+                    // 아마 onTap 함수 자체를 넘겨받는 식으로 구현해야 할 것 같습니다.
                     // onTap: () {
                     //   Navigator.of(context).push(SearchProductDetailPage.route(
                     //       data['freight_id'], data['bl'].toString()));
@@ -136,6 +146,8 @@ class DetailButton extends MyWidget {
               )
             : InkWell(
                 onTap: onTap,
+                // TODO : 버튼 클릭 시 해당 화물의 상세보기 화면(SearchProductDetailPage)으로 이동하는 코드를 작성하면 됩니다.
+                // 위에서 상술한 기능과 동일합니다.
                 // onTap: () {
                 //   Navigator.of(context).push(SearchProductDetailPage.route(
                 //       data['freight_id'], data['bl'].toString()));
@@ -194,16 +206,20 @@ Widget clipBoardDateBuilder(data, field) {
   );
 }
 
-Widget pictureBuilder(
-    data, field, jwt, List<String> originalUrlList, thumbnailUrlList) {
+Widget pictureBuilder(Map<String, dynamic> data, field, jwt) {
   // TODO: 사진 구현
-  // return Container();
-  return SearchImageList(
-      originalUrlList: originalUrlList,
-      thumbnailUrlList: thumbnailUrlList,
-      bl: data['bl'],
-      dataRowHeight: 75,
-      jwt: jwt);
+  // Map<String, dynamic> data 는 search API의 result 값 한줄이 들어갑니다(freight_id 1개)
+  // 먼저, data에 originalUrlList, thumbnailUrlList가 추가되어 있어야 합니다.
+  // (두 List가 data에 추가되는 시점은 API를 decoding 할 때가 적합합니다.)
+  // SearchImageList를 호출해서, data['originalUrlList'], data['thumbnailUrlList']로 접근해서 사용하는 방식으로 구현하시면 됩니다.
+  // 더 좋은 방법이 있으면 구현방식을 바꿔도 무관합니다.
+  return Container();
+  // return SearchImageList(
+  //     originalUrlList: data['originalUrlList']
+  //     thumbnailUrlList: data['thumbnailUrlList'],
+  //     bl: data['bl'],
+  //     dataRowHeight: 75,
+  //     jwt: jwt);
 }
 
 Widget dividerBuilder(data, field) {
@@ -232,11 +248,16 @@ class PinokioDataColumn extends DataColumn2 {
     super.fixedWidth,
     this.isFixed = false,
     this.type = ColumnType.clipboardtext,
+    this.originalUrlList,
+    this.thumbnailUrlList,
   });
 
   final String field;
   final bool isFixed;
   final ColumnType? type;
+
+  final List<List<String>>? originalUrlList;
+  final List<List<String>>? thumbnailUrlList;
 }
 
 PinokioDataColumn dividerColumn = PinokioDataColumn(
@@ -277,8 +298,8 @@ class PinokioDataTable extends StatefulWidget {
     required this.sortAscending,
     required this.rowsPerPage,
     required this.jwt,
-    required this.originalUrlList,
-    required this.thumbnailUrlList,
+    this.originalUrlList = const [],
+    this.thumbnailUrlList = const [],
     this.selectable = false,
     this.selectedList,
     this.onSelectedChanged,
@@ -290,8 +311,8 @@ class PinokioDataTable extends StatefulWidget {
   final bool sortAscending;
   final int rowsPerPage;
   final String jwt;
-  final List<String> originalUrlList;
-  final List<String> thumbnailUrlList;
+  final List<List<String>>? originalUrlList;
+  final List<List<String>>? thumbnailUrlList;
   final bool selectable;
   final List<dynamic>? selectedList;
   final Function(bool?, dynamic)? onSelectedChanged;
@@ -368,23 +389,25 @@ class PinokioDataTableState extends State<PinokioDataTable> {
                   hidePaginator: true,
                   columns: finalColumnList,
                   source: PinokioDataTableSource(
-                      rows: widget.rows,
-                      columns: finalColumnList,
-                      context: context,
-                      selectable: widget.selectable,
-                      onSelectedChanged: widget.onSelectedChanged,
-                      selectedList: widget.selectedList,
-                      hoverIdx: hoverIdx,
-                      setHoverIdx: (index) {
-                        setState(() {
-                          hoverIdx = index;
-                        });
-                      },
-                      jwt: widget.jwt,
-                      originalUrlList: widget.originalUrlList,
-                      thumbnailUrlList: widget.thumbnailUrlList)),
+                    rows: widget.rows,
+                    columns: finalColumnList,
+                    context: context,
+                    selectable: widget.selectable,
+                    onSelectedChanged: widget.onSelectedChanged,
+                    selectedList: widget.selectedList,
+                    hoverIdx: hoverIdx,
+                    setHoverIdx: (index) {
+                      setState(() {
+                        hoverIdx = index;
+                      });
+                    },
+                    jwt: widget.jwt,
+                  )),
             ),
           ),
+          // TODO : CustomizedPaginator를 정의합니다.
+          // 별도의 Paginator를 구현하고, PaginatorController를 연결시켜서 Pagitnator가 작동하도록 구현하면 됩니다.
+          // PaginatorController는 PaginationDataTable2 Reference를 참고해주세요.
           Container(child: const Text('Paginator 자리')),
         ],
       ),
@@ -400,8 +423,6 @@ class PinokioDataTableSource extends DataTableSource {
     required this.hoverIdx,
     required this.setHoverIdx,
     required this.jwt,
-    required this.originalUrlList,
-    required this.thumbnailUrlList,
     this.selectable = false,
     this.selectedList,
     this.onSelectedChanged,
@@ -412,8 +433,6 @@ class PinokioDataTableSource extends DataTableSource {
   final int hoverIdx;
   final Function(int index) setHoverIdx;
   final String jwt;
-  final List<String> originalUrlList;
-  final List<String> thumbnailUrlList;
 
   final bool selectable;
   final List<dynamic>? selectedList;
@@ -459,8 +478,7 @@ class PinokioDataTableSource extends DataTableSource {
           body = blTextBuilder(data, column.field);
           break;
         case ColumnType.picture:
-          body = pictureBuilder(
-              data, column.field, jwt, originalUrlList, thumbnailUrlList);
+          body = pictureBuilder(data, column.field, jwt);
           break;
         case ColumnType.divider:
           body = Container(
